@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.thomas.apps.workmanagerexample.DataStoreUtils
+import com.thomas.apps.workmanagerexample.DataStoreUtils.getEnableNotification
 import com.thomas.apps.workmanagerexample.DataStoreUtils.getRunFail
 import com.thomas.apps.workmanagerexample.NotificationUtils.showNotification
 import com.thomas.apps.workmanagerexample.db.WorkDatabase
@@ -31,9 +32,9 @@ class LogWorker(context: Context, params: WorkerParameters) : CoroutineWorker(co
 
         setProgress(workDataOf(PROGRESS to 0))
 
-        val repeatTimes = WORK_DURATION * 10
+        val repeatTimes = WORK_DURATION * 100
         repeat(repeatTimes) {
-            delay(DELAY_DURATION / 10)
+            delay(DELAY_DURATION / 100)
 
             val percent: Int = (it.toDouble() / repeatTimes * 100).roundToInt()
             setProgress(workDataOf(PROGRESS to percent))
@@ -48,7 +49,10 @@ class LogWorker(context: Context, params: WorkerParameters) : CoroutineWorker(co
         val id = db.workLogDao.insertOrReplace(log)
 
         val updatedLog = log.copy(id = id)
-        applicationContext.showNotification(updatedLog)
+
+        val showNotification = applicationContext.getEnableNotification().firstOrNull() ?: false
+        if (showNotification)
+            applicationContext.showNotification(updatedLog)
 
         return if (runFail) {
             Result.retry()
